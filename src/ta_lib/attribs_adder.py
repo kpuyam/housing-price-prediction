@@ -1,15 +1,9 @@
-"""Module for listing down additional custom functions required for production."""
-
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
 
-def binned_selling_price(df):
-    """Bin the selling price column using quantiles."""
-    return pd.qcut(df["median_house_value"], q=10)
-
-
 rooms_ix, bedrooms_ix, population_ix, households_ix = 3, 4, 5, 6
+
 
 class FeatureExtraction(BaseEstimator, TransformerMixin):
 
@@ -57,14 +51,10 @@ class FeatureExtraction(BaseEstimator, TransformerMixin):
             The transformed data with the new derived features.
         """
         rooms_per_household = X[:, rooms_ix] / X[:, households_ix]
-        population_per_household = \
-            X[:, population_ix] / X[:, households_ix]
+        population_per_household = X[:, population_ix] / X[:, households_ix]
         bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
         return np.c_[
-            X,
-            rooms_per_household,
-            population_per_household,
-            bedrooms_per_room
+            X, rooms_per_household, population_per_household, bedrooms_per_room
         ]
 
     def inverse_transform(self, X, full_pipeline):
@@ -87,8 +77,7 @@ class FeatureExtraction(BaseEstimator, TransformerMixin):
         - reconstructed_data: pandas.DataFrame
             A DataFrame with the inverse-transformed data, which should resemble the original data before transformation.
         """
-        std_scaler = full_pipeline.named_transformers_["num"]\
-            .named_steps["std_scaler"]
+        std_scaler = full_pipeline.named_transformers_["num"].named_steps["std_scaler"]
         inverse_num = std_scaler.inverse_transform(X.iloc[:, :-5])
         original_data = inverse_num[:, :-3]
 
@@ -97,14 +86,7 @@ class FeatureExtraction(BaseEstimator, TransformerMixin):
 
         reconstructed_data = pd.DataFrame(
             original_data,
-            columns=["longitude",
-                     "latitude",
-                     "housing_median_age",
-                     "total_rooms",
-                     "total_bedrooms",
-                     "population",
-                     "households",
-                     "median_income"]
+            columns=["longitude", "latitude", "housing_median_age", "total_rooms", "total_bedrooms", "population", "households", "median_income"]
         )
         reconstructed_data["ocean_proximity"] = inverse_categ.flatten()
 
